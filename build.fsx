@@ -139,6 +139,18 @@ Target "Build" (fun _ ->
     |> ignore
 )
 
+Target "BuildVipr" (fun _ ->
+    let viprSln = "paket-files/Microsoft/Vipr/Vipr.sln"
+    viprSln |> RestoreMSSolutionPackages (fun p -> {p with OutputPath = "paket-files/Microsoft/Vipr/packages"})
+    [ viprSln ]     
+#if MONO
+    |> MSBuildReleaseExt "" [ ("DefineConstants","MONO") ] "Build"
+#else
+    |> MSBuildDebug "" "Build"
+#endif
+    |> ignore
+)
+
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
 
@@ -374,6 +386,7 @@ Target "All" DoNothing
 
 "Clean"
   ==> "AssemblyInfo"
+  ==> "BuildVipr"
   ==> "Build"
   ==> "CopyBinaries"
   ==> "RunTests"

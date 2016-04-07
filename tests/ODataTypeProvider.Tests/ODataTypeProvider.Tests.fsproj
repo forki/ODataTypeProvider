@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -8,7 +8,7 @@
     <ProjectGuid>47f20fd4-7e11-4ac3-b565-d5dc5e5a18bf</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>ODataTypeProvider.Tests</RootNamespace>
-    <AssemblyName>ODataTypeProvider.Tests</AssemblyName>
+    <AssemblyName>FSharp.Data.TypeProviders.OData.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
     <Name>ODataTypeProvider.Tests</Name>

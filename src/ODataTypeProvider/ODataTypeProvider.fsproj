@@ -59,6 +59,10 @@
   -->
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
+    <Compile Include="..\..\paket-files\caindy\FSharpUtils\Prelude.fs">
+      <Paket>True</Paket>
+      <Link>Prelude.fs</Link>
+    </Compile>
     <Compile Include="..\..\paket-files\fsprojects\FSharp.TypeProviders.StarterPack\src\ProvidedTypes.fsi">
       <Paket>True</Paket>
       <Link>ProvidedTypes.fsi</Link>

@@ -5,6 +5,7 @@ group Main
   github fsprojects/FSharp.TypeProviders.StarterPack src/ProvidedTypes.fsi
   github fsprojects/FSharp.TypeProviders.StarterPack src/ProvidedTypes.fs
   github Microsoft/Vipr
+  nuget FSharp.Data
 
 group Build
   source https://nuget.org/api/v2

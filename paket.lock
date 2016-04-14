@@ -1,12 +1,17 @@
-
+NUGET
+  remote: https://www.nuget.org/api/v2
+  specs:
+    FSharp.Data (2.2.5)
+      Zlib.Portable (>= 1.10) - framework: portable-net40+sl50+wp80+win80
+    Zlib.Portable (1.11) - framework: portable-net40+sl50+wp80+win80
 GITHUB
   remote: caindy/FSharpUtils
   specs:
     Prelude.fs (3164d1a876c36ff49e7e7b12b868469335d12c15)
   remote: fsprojects/FSharp.TypeProviders.StarterPack
   specs:
-    src/ProvidedTypes.fs (ddfb906ecbac78dc9f0f5e172518a72cb5fdf651)
-    src/ProvidedTypes.fsi (ddfb906ecbac78dc9f0f5e172518a72cb5fdf651)
+    src/ProvidedTypes.fs (ea733039c168a8e2d441e298a1c67d98f63b00f6)
+    src/ProvidedTypes.fsi (ea733039c168a8e2d441e298a1c67d98f63b00f6)
   remote: Microsoft/Vipr
   specs:
     FULLPROJECT (16ed2764da44fc86ad3a12dd756e53d854afb3f5)
@@ -14,7 +19,7 @@ GROUP Build
 NUGET
   remote: https://www.nuget.org/api/v2
   specs:
-    FAKE (4.23.4)
+    FAKE (4.25.4)
     FSharp.Compiler.Service (2.0.0.6)
     FSharp.Formatting (2.14.2)
       FSharp.Compiler.Service (2.0.0.6)
@@ -33,7 +38,7 @@ NUGET
 GITHUB
   remote: fsharp/FAKE
   specs:
-    modules/Octokit/Octokit.fsx (8c07854269f6c442ad7dab8e63d2ba1e86dec744)
+    modules/Octokit/Octokit.fsx (3bf706bd6058733a1a034755741076b3953aaf09)
       Octokit
 GROUP Test
 NUGET

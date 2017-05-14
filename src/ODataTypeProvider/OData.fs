@@ -87,11 +87,11 @@ type OData (url : string, container : ProvidedTypeDefinition) =
                           let hd::tl =
                             ps |> List.mapi (fun idx p ->
                                              let v = Expr.Coerce(args.[idx], typeof<obj>)
-                                             let paramName = FSharp.Quotations.Expr.Value p.Name
+                                             let paramName = Expr.Value p.Name
                                              <@@ sprintf "%s = %A" %%paramName %%v @@>)
                           tl |> List.fold (fun s p -> <@@ sprintf "%s, %s" %%s %%p @@>) hd
-                        let url = FSharp.Quotations.Expr.Value url
-                        let fName = FSharp.Quotations.Expr.Value m.Name
+                        let url   = Expr.Value url
+                        let fName = Expr.Value m.Name
                         <@@ 
                            let requestUrl = sprintf "%s/%s(%s)" %%url %%fName %%paramsStr
                            printfn "Requesting %s" requestUrl

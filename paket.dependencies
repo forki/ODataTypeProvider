@@ -4,7 +4,6 @@ group Main
   github caindy/FSharpUtils Prelude.fs
   github fsprojects/FSharp.TypeProviders.StarterPack src/ProvidedTypes.fsi
   github fsprojects/FSharp.TypeProviders.StarterPack src/ProvidedTypes.fs
-  github Microsoft/Vipr
   nuget FSharp.Data
 
 group Build
@@ -19,5 +18,5 @@ group Build
 group Test
   source https://nuget.org/api/v2
   
-  nuget NUnit ~> 2
-  nuget NUnit.Runners ~> 2
+  nuget NUnit
+  nuget NUnit.Runners

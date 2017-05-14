@@ -4,7 +4,7 @@ group Main
   github caindy/FSharpUtils Prelude.fs
   github fsprojects/FSharp.TypeProviders.StarterPack src/ProvidedTypes.fsi
   github fsprojects/FSharp.TypeProviders.StarterPack src/ProvidedTypes.fs
-  nuget FSharp.Data
+  nuget FSharp.Data.Xsd
 
 group Build
   source https://nuget.org/api/v2

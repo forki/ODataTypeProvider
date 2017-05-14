@@ -3,11 +3,11 @@
 open System
 open FSharp.Data
 open ProviderImplementation.ProvidedTypes
-open System.Xml.Linq
 open FSharp.Quotations
 open Relay.Prelude
 
-type Metadata = XmlProvider<"Metadata.xml">
+type Edm = XmlProvider<Schema="edm.xsd">
+type Edmx = XmlProvider<Schema="edmx.xsd">
 
 module ODataParser =
   let inline tryFind (schemaNamespace : string) (elements : ^e array) (name : string) =

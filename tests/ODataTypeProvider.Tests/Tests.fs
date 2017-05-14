@@ -6,6 +6,6 @@ type O = ODataV4<"http://services.odata.org/V4/TripPinService">
 
 
 [<Test>]
-let ``basics`` () =
-  O.Functions.
+let ``hello world`` () =
+  O.Functions.GetNearestAirport(5.,6.) |> ignore
   Assert.Inconclusive()

@@ -3,10 +3,9 @@
 open System
 open FSharp.Data
 open ProviderImplementation.ProvidedTypes
-open ProviderImplementation
 open System.Xml.Linq
-open System.Xml
 open FSharp.Quotations
+open Relay.Prelude
 
 type Metadata = XmlProvider<"Metadata.xml">
 
@@ -39,22 +38,23 @@ type OData (url : string, container : ProvidedTypeDefinition) =
   let rec mapEntityType typeName : ProvidedTypeDefinition option =
     ODataParser.tryFind dataSvcs.Schema.Namespace dataSvcs.Schema.EntityTypes typeName
     |> Option.map (fun entityTy ->
-                   let ty = ProvidedTypes.ProvidedTypeDefinition(entityTy.Name, Some typeof<obj>)
+                   let ty = ProvidedTypeDefinition(entityTy.Name, Some typeof<obj>)
                    entityTy.Properties
                    |> Array.iter (fun p -> ty.AddMember(ProvidedProperty(p.Name, mapType p.Type p.Nullable, GetterCode = fun _ -> <@@ obj() @@>)))
                    ty.AddMember(ProvidedConstructor([]))
                    ty)
   and mapComplexType typeName : ProvidedTypeDefinition option =
     ODataParser.tryFind dataSvcs.Schema.Namespace dataSvcs.Schema.ComplexTypes typeName
-    |> Option.map (fun complexTy -> ProvidedTypes.ProvidedTypeDefinition(complexTy.Name, None))
+    |> Option.map (fun complexTy -> ProvidedTypeDefinition(complexTy.Name, None))
   and mapEnumType typeName : ProvidedTypeDefinition option =
     ODataParser.tryFind dataSvcs.Schema.Namespace dataSvcs.Schema.EnumTypes typeName
-    |> Option.map (fun enumTy -> ProvidedTypes.ProvidedTypeDefinition(enumTy.Name, None))
+    |> Option.map (fun enumTy -> ProvidedTypeDefinition(enumTy.Name, None))
   and mapSvcDefinedType typeName : Type option =
-    entity mapEntityType typeName
-    |> ``or`` (mapComplexType typeName)
-    |> ``or`` (mapEnumType typeName)
-    |> Option.map (fun ty -> upcast ty)
+    choice {
+        return entity mapEntityType typeName
+        return mapComplexType typeName
+        return mapEnumType typeName
+    } |> Option.map (fun ty -> upcast ty)
   and mapType typeName (Default true isNullable) =
     let mkTy t =
       if isNullable then

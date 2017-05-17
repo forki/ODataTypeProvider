@@ -1,16 +1,18 @@
-namespace FSharp.Data.TypeProviders.DesignTime
+namespace FSharp.Data.Experimental.ODataProvider
 
 open FSharp.Core.CompilerServices
 open ProviderImplementation.ProvidedTypes
 open System
 open System.IO
+open System.Reflection
 
 [<TypeProvider>]
-type ODataProviders (_cfg : TypeProviderConfig) as tp = 
+type ODataProviders (cfg : TypeProviderConfig) as tp = 
   inherit TypeProviderForNamespaces ()
   let ns = "FSharp.Data.TypeProviders"
-  let asm = typeof<ODataProviders>.Assembly
-  let odataV4Container = new ProvidedTypeDefinition(asm, ns, "ODataV4", Some typeof<obj>)
+  let asm = Assembly.LoadFrom cfg.RuntimeAssembly
+
+
   let (|ValidODataPath|) (args : obj array) : string =
     match args with
     | [| (:? string as s) |] ->
@@ -24,10 +26,8 @@ type ODataProviders (_cfg : TypeProviderConfig) as tp =
     let odataV4 = new ProvidedTypeDefinition(asm, ns, tyName, Some typeof<obj>)
     OData(path, odataV4).AppendTo ()
 
+  let odataV4Container = new ProvidedTypeDefinition(asm, ns, "ODataV4", Some typeof<obj>)
   do
     let path = new ProvidedStaticParameter("Path", typeof<string>)
     odataV4Container.DefineStaticParameters([path], createODataV4)
     tp.AddNamespace(ns, [odataV4Container])
-
-[<assembly:TypeProviderAssembly>]
-do ()

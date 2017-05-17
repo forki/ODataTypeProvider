@@ -1,10 +1,11 @@
-﻿namespace FSharp.Data.TypeProviders.DesignTime
+﻿namespace FSharp.Data.Experimental.ODataProvider
 
 open System
 open FSharp.Data
 open ProviderImplementation.ProvidedTypes
 open FSharp.Quotations
 open Relay.Prelude
+open System.Xml.Linq
 
 type Edm = XmlProvider<Schema="edm.xsd">
 type Edmx = XmlProvider<Schema="edmx.xsd">
@@ -16,13 +17,16 @@ module ODataParser =
       let nominalTypeName = sprintf "%s.%s" schemaNamespace localName
       nominalTypeName = name
     elements |> Array.tryFind isNameMatch
+
     
 type OData (url : string, container : ProvidedTypeDefinition) =
   let url' = if IO.File.Exists(url) then url // TODO: file scenario not supportable without also specifying service URL, remove?
              elif url.EndsWith("/$metdata") then url
              elif url.EndsWith("/") then url + "$metadata"
              else url + "/$metadata"
-  let dataSvcs = Metadata.Load(url').DataServices
+  let metadata = Edmx.Load(url')
+  let dataSvcs = metadata.Edmx.Value.DataServices
+  let schema = dataSvcs.Schemas.[0]
 
   let entity f =
     let d = Collections.Generic.Dictionary<string,ProvidedTypeDefinition option>(HashIdentity.Structural)
@@ -36,7 +40,7 @@ type OData (url : string, container : ProvidedTypeDefinition) =
       else d.[n]
 
   let rec mapEntityType typeName : ProvidedTypeDefinition option =
-    ODataParser.tryFind dataSvcs.Schema.Namespace dataSvcs.Schema.EntityTypes typeName
+    ODataParser.tryFind schema.Namespace schema.EntityTypes typeName
     |> Option.map (fun entityTy ->
                    let ty = ProvidedTypeDefinition(entityTy.Name, Some typeof<obj>)
                    entityTy.Properties
@@ -44,10 +48,10 @@ type OData (url : string, container : ProvidedTypeDefinition) =
                    ty.AddMember(ProvidedConstructor([]))
                    ty)
   and mapComplexType typeName : ProvidedTypeDefinition option =
-    ODataParser.tryFind dataSvcs.Schema.Namespace dataSvcs.Schema.ComplexTypes typeName
+    ODataParser.tryFind schema.Namespace schema.ComplexTypes typeName
     |> Option.map (fun complexTy -> ProvidedTypeDefinition(complexTy.Name, None))
   and mapEnumType typeName : ProvidedTypeDefinition option =
-    ODataParser.tryFind dataSvcs.Schema.Namespace dataSvcs.Schema.EnumTypes typeName
+    ODataParser.tryFind schema.Namespace schema.EnumTypes typeName
     |> Option.map (fun enumTy -> ProvidedTypeDefinition(enumTy.Name, None))
   and mapSvcDefinedType typeName : Type option =
     choice {
@@ -73,8 +77,8 @@ type OData (url : string, container : ProvidedTypeDefinition) =
     |> mkTy
  
   let edmName name = XName.Get(name, "http://docs.oasis-open.org/odata/ns/edm")
-  let mkFunction (fi : Metadata.FunctionImport) : ProvidedMethod option =
-    ODataParser.tryFind dataSvcs.Schema.Namespace dataSvcs.Schema.Functions fi.Function
+  let mkFunction (fi : Edmx.FunctionImport) : ProvidedMethod option =
+    ODataParser.tryFind schema.Namespace schema.Functions fi.Function
     |> Option.map (fun f ->
                    let ps = f.Parameters
                             |> Array.map (fun p -> ProvidedParameter(p.Name, mapType p.Type p.Nullable))
@@ -104,12 +108,14 @@ type OData (url : string, container : ProvidedTypeDefinition) =
   // kinds: EntitySet, Singleton, FunctionImport
   member x.AppendTo () =
     let functionsTy = ProvidedTypeDefinition("Functions", None)
-    let entityContainer = dataSvcs.Schema.EntityContainer // exactly one of these by spec
+    (*
+    let entityContainer = schema.EntityContainers.[0] // exactly one of these by spec
 
     let functions = entityContainer.XElement.Elements(edmName "FunctionImport")
-                    |> Seq.map Metadata.FunctionImport
+                    |> Seq.map Edmx.FunctionImport
                     |> Seq.choose mkFunction
                     |> Seq.toList
     functionsTy.AddMembers(functions)
+    *)
     container.AddMember(functionsTy)
     container

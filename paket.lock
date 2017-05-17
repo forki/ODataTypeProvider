@@ -1,6 +1,7 @@
 NUGET
   remote: https://www.nuget.org/api/v2
     FSharp.Data.Xsd (1.0)
+    System.Xml.Linq (3.5.21022.801)
 GITHUB
   remote: caindy/FSharpUtils
     Prelude.fs (3164d1a876c36ff49e7e7b12b868469335d12c15)

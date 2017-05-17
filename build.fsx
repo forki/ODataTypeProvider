@@ -113,6 +113,8 @@ Target "CopyBinaries" (fun _ ->
     -- "src/**/*.shproj"
     |>  Seq.map (fun f -> ((System.IO.Path.GetDirectoryName f) </> "bin/Release", "bin" </> (System.IO.Path.GetFileNameWithoutExtension f)))
     |>  Seq.iter (fun (fromDir, toDir) -> CopyDir toDir fromDir (fun _ -> true))
+     
+    CopyDir "bin/ODataProvider" "bin/ODataProvider.DesignTime" (fun _ -> true)
 )
 
 // --------------------------------------------------------------------------------------
@@ -144,6 +146,7 @@ Target "Build" (fun _ ->
 
 Target "RunTests" (fun _ ->
     !! testAssemblies
+    -- "tests/ODataTypeProvider.Tests/bin/Release/*Tests*.dll"
     |> Testing.NUnit3.NUnit3 (fun p ->
         { p with TimeOut = TimeSpan.FromSeconds 10. })
 )

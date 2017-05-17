@@ -73,7 +73,7 @@
     </xs:documentation>
   </xs:annotation>
 
-  <xs:import namespace="http://docs.oasis-open.org/odata/ns/edm" />
+  <xs:import namespace="http://docs.oasis-open.org/odata/ns/edm" schemaLocation="http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/csprd01/schemas/edm.xsd" />
 
   <xs:element name="Edmx" type="edmx:TEdmx" />
   <xs:complexType name="TEdmx">

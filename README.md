@@ -7,6 +7,10 @@
 - [ ] actions
 - [ ] queries
 
+## New, New Plan
+- Pattern this project after the Swagger Provider
+- Use the new FSharp.Data.Xsd provider to provide types from the Edm/Edmx schemas
+- 
 ## New Plan
 
 - Create an [ASP.NET Web API that exposes an OData v4 service](https://blogs.msdn.microsoft.com/webdev/2014/03/13/getting-started-with-asp-net-web-api-2-2-for-odata-v4-0/) for testing

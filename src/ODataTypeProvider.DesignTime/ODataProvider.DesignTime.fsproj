@@ -8,11 +8,11 @@
     <ProjectGuid>e474e82a-8760-4671-a039-1ff96781957e</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>ODataTypeProvider</RootNamespace>
-    <AssemblyName>ODataTypeProvider</AssemblyName>
+    <AssemblyName>ODataProvider.DesignTime</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>ODataTypeProvider</Name>
+    <Name>ODataProvider.DesignTime</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -62,21 +62,20 @@
   <ItemGroup>
     <Compile Include="..\..\paket-files\caindy\FSharpUtils\Prelude.fs">
       <Paket>True</Paket>
-      <Link>Prelude.fs</Link>
+      <Link>paket-files/Prelude.fs</Link>
     </Compile>
     <Compile Include="..\..\paket-files\fsprojects\FSharp.TypeProviders.StarterPack\src\ProvidedTypes.fsi">
       <Paket>True</Paket>
-      <Link>ProvidedTypes.fsi</Link>
+      <Link>paket-files/ProvidedTypes.fsi</Link>
     </Compile>
     <Compile Include="..\..\paket-files\fsprojects\FSharp.TypeProviders.StarterPack\src\ProvidedTypes.fs">
       <Paket>True</Paket>
-      <Link>ProvidedTypes.fs</Link>
+      <Link>paket-files/ProvidedTypes.fs</Link>
     </Compile>
     <Compile Include="OData.fs" />
     <Compile Include="Providers.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
-    <None Include="Service.json" />
     <None Include="edm.xsd" />
     <None Include="edmx.xsd" />
   </ItemGroup>
@@ -107,6 +106,17 @@
       <ItemGroup>
         <Reference Include="FSharp.Data.Xsd">
           <HintPath>..\..\packages\FSharp.Data.Xsd\lib\net45\FSharp.Data.Xsd.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v2.0' Or $(TargetFrameworkVersion) == 'v3.0' Or $(TargetFrameworkVersion) == 'v3.5' Or $(TargetFrameworkVersion) == 'v4.0' Or $(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7')">
+      <ItemGroup>
+        <Reference Include="System.Xml.Linq">
+          <HintPath>..\..\packages\System.Xml.Linq\lib\net20\System.Xml.Linq.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

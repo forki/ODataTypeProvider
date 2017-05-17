@@ -2,7 +2,7 @@
 namespace System
 open System.Reflection
 
-[<assembly: AssemblyTitleAttribute("ODataTypeProvider")>]
+[<assembly: AssemblyTitleAttribute("ODataProvider.DesignTime")>]
 [<assembly: AssemblyProductAttribute("ODataTypeProvider")>]
 [<assembly: AssemblyDescriptionAttribute("an F# type provider for OData resources")>]
 [<assembly: AssemblyVersionAttribute("1.0")>]
@@ -10,7 +10,7 @@ open System.Reflection
 do ()
 
 module internal AssemblyVersionInformation =
-    let [<Literal>] AssemblyTitle = "ODataTypeProvider"
+    let [<Literal>] AssemblyTitle = "ODataProvider.DesignTime"
     let [<Literal>] AssemblyProduct = "ODataTypeProvider"
     let [<Literal>] AssemblyDescription = "an F# type provider for OData resources"
     let [<Literal>] AssemblyVersion = "1.0"

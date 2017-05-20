@@ -24,6 +24,11 @@ module ODataParser =
       | Some _ -> Failure "Only support version 4.0"
       | _ -> Failure "Metadata invalid"
     with ex -> Failure (ex.Message)
+  let parseSchemas (dataSvcs : Edmx.DataServices) =
+    dataSvcs.Schemas
+    |> Array.map (fun s -> new ProvidedTypeDefinition(s.Namespace, Some typeof<obj>))
+
+  
 
 type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
   let entity f =

@@ -27,3 +27,12 @@ let ``should succeed if metadata is v4.0 or v4.01`` () =
   match ODataParser.parseMetadata Inputs.version4, ODataParser.parseMetadata Inputs.version401 with
   | Success _, Success _ -> Assert.Pass()
   | _ -> Assert.Fail()
+
+let (Success tripPinMetadata) = ODataParser.parseMetadata Inputs.tripPinService
+[<Test>]
+let ``should provide schemas as a simple type`` () =
+  match ODataParser.parseSchemas tripPinMetadata with
+  | [|s|] -> Assert.IsNotEmpty(s.Name); printfn "%A" s
+  | _ -> Assert.Fail()
+  
+  

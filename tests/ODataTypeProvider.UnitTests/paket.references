@@ -1,3 +1,6 @@
-﻿group Test
+﻿FSharp.Data.Xsd
+System.Xml.Linq
+
+group Test
 NUnit
 NUnit.Runners

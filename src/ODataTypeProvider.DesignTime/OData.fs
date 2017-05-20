@@ -6,9 +6,8 @@ open ProviderImplementation.ProvidedTypes
 open FSharp.Quotations
 open Relay.Prelude
 open System.Xml.Linq
-
-type Edm = XmlProvider<Schema="edm.xsd">
-type Edmx = XmlProvider<Schema="edmx.xsd">
+type Edm = XmlProvider<Schema=ODataSchemas.Edm>
+type Edmx = XmlProvider<Schema=ODataSchemas.Edmx>
 
 module ODataParser =
   let inline tryFind (schemaNamespace : string) (elements : ^e array) (name : string) =
@@ -17,17 +16,16 @@ module ODataParser =
       let nominalTypeName = sprintf "%s.%s" schemaNamespace localName
       nominalTypeName = name
     elements |> Array.tryFind isNameMatch
+  let parseMetadata metadata =
+    try
+      match Edmx.Parse(metadata).Edmx with
+      | Some metadata when metadata.Version = 4.0m || metadata.Version = 4.01m ->
+        Success metadata.DataServices
+      | Some _ -> Failure "Only support version 4.0"
+      | _ -> Failure "Metadata invalid"
+    with ex -> Failure (ex.Message)
 
-    
-type OData (url : string, container : ProvidedTypeDefinition) =
-  let url' = if IO.File.Exists(url) then url // TODO: file scenario not supportable without also specifying service URL, remove?
-             elif url.EndsWith("/$metdata") then url
-             elif url.EndsWith("/") then url + "$metadata"
-             else url + "/$metadata"
-  let metadata = Edmx.Load(url')
-  let dataSvcs = metadata.Edmx.Value.DataServices
-  let schema = dataSvcs.Schemas.[0]
-
+type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
   let entity f =
     let d = Collections.Generic.Dictionary<string,ProvidedTypeDefinition option>(HashIdentity.Structural)
     fun n ->
@@ -38,7 +36,7 @@ type OData (url : string, container : ProvidedTypeDefinition) =
           container.AddMember(e.Value)
         e
       else d.[n]
-
+  let schema = dataSvcs.Schemas.[0]
   let rec mapEntityType typeName : ProvidedTypeDefinition option =
     ODataParser.tryFind schema.Namespace schema.EntityTypes typeName
     |> Option.map (fun entityTy ->
@@ -94,15 +92,9 @@ type OData (url : string, container : ProvidedTypeDefinition) =
                                              let paramName = Expr.Value p.Name
                                              <@@ sprintf "%s = %A" %%paramName %%v @@>)
                           tl |> List.fold (fun s p -> <@@ sprintf "%s, %s" %%s %%p @@>) hd
-                        let url   = Expr.Value url
-                        let fName = Expr.Value m.Name
-                        <@@ 
-                           let requestUrl = sprintf "%s/%s(%s)" %%url %%fName %%paramsStr
-                           printfn "Requesting %s" requestUrl
-                           use client = new Net.WebClient()
-                           let response = client.DownloadString(requestUrl)
-                           printfn "%s" response
-                           obj() @@>) // QUESTION: how to return Airport here (erased)?
+                        //let url   = Expr.Value url
+                        //let fName = Expr.Value m.Name
+                        <@@ obj() @@>) // QUESTION: how to return Airport here (erased)?
                    m)
 
   // kinds: EntitySet, Singleton, FunctionImport

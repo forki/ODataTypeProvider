@@ -1,4 +1,37 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿module Inputs
+
+[<Literal>]
+let version3 = """<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="Microsoft.OData.SampleService.Models.TripPin" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
+"""
+ 
+[<Literal>]
+let version4 = """<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="Microsoft.OData.SampleService.Models.TripPin" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
+"""
+ 
+[<Literal>]
+let version401 = """<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.01" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="Microsoft.OData.SampleService.Models.TripPin" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
+"""
+ 
+[<Literal>]
+let tripPinService = """<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
   <edmx:DataServices>
     <Schema Namespace="Microsoft.OData.SampleService.Models.TripPin" xmlns="http://docs.oasis-open.org/odata/ns/edm">
@@ -333,3 +366,4 @@
     </Schema>
   </edmx:DataServices>
 </edmx:Edmx>
+"""

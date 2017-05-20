@@ -72,12 +72,11 @@
       <Paket>True</Paket>
       <Link>paket-files/ProvidedTypes.fs</Link>
     </Compile>
+    <Compile Include="ODataSchemas.fs" />
     <Compile Include="OData.fs" />
     <Compile Include="Providers.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
-    <None Include="edm.xsd" />
-    <None Include="edmx.xsd" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

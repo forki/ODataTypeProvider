@@ -41,11 +41,21 @@ let ``should provide schemas as a simple type`` () =
   Maybe this would be possible via
   https://msdn.microsoft.com/en-us/library/system.reflection.emit.modulebuilder.defineenum.aspx
 *)
-open System.Reflection
 [<Test>]
 let ``should parse EnumType as static read-only property`` () =
-  for s in tripPinMetadata.Schemas.[0].EnumTypes do
-    let t = ODataParser.parseEnum s
+  let schema = tripPinMetadata.Schemas.[0]
+  let p = new SchemaParser(schema)
+  for s in schema.EnumTypes do
+    let t = p.TypeCache.[s.Name]
     Assert.AreEqual(Seq.length s.Members, Seq.length <| t.GetProperties())
     Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> not <| p.CanWrite))
     Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> p.GetMethod.IsStatic))
+(*
+[<Test>]
+let ``should parse ComplexType and place in type cache`` () =
+  for s in tripPinMetadata.Schemas.[0].ComplexTypes do
+    let t = ODataParser.parseComplexType s
+    Assert.AreEqual(Seq.length s.Members, Seq.length <| t.GetProperties())
+    Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> not <| p.CanWrite))
+    Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> p.GetMethod.IsStatic))
+*) 

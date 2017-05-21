@@ -1,6 +1,7 @@
 ﻿namespace FSharp.Data.Experimental.ODataProvider
 
 open System
+open System.Reflection
 open FSharp.Data
 open ProviderImplementation.ProvidedTypes
 open FSharp.Quotations
@@ -9,76 +10,43 @@ open System.Xml.Linq
 type Edm = XmlProvider<Schema=ODataSchemas.Edm>
 type Edmx = XmlProvider<Schema=ODataSchemas.Edmx>
 
-module ODataParser =
-  open System.Reflection
-
+module SchemaUtil =
   let inline tryFind (schemaNamespace : string) (elements : ^e array) (name : string) =
     let isNameMatch (e : ^e) =
       let localName = (^e : (member Name: string) e)
       let nominalTypeName = sprintf "%s.%s" schemaNamespace localName
       nominalTypeName = name
     elements |> Array.tryFind isNameMatch
-  let parseMetadata metadata =
-    try
-      match Edmx.Parse(metadata).Edmx with
-      | Some metadata when metadata.Version = 4.0m || metadata.Version = 4.01m ->
-        Success metadata.DataServices
-      | Some _ -> Failure "Only support version 4.0"
-      | _ -> Failure "Metadata invalid"
-    with ex -> Failure (ex.Message)
-
-  let parseEnum (s : Edmx.EnumType) =
-    let e = new ProvidedTypeDefinition(s.Name, Some typeof<obj>, IsErased = false)
-    e.HideObjectMethods <- true
-    // TODO support optional longs in Edmx.EnumType
-    for v in s.Members do
-      let long = typeof<int64> // per Edmx spec
-      let providedProperty =
-          ProvidedProperty(v.Name, long,
-              GetterCode = (fun _ -> Expr.Value v.Value.Value), IsStatic = true)
-      e.AddMembers [providedProperty :> MemberInfo]
-    e 
-
-  let parseSchema (s : Edmx.Schema) =
-    let c = new ProvidedTypeDefinition(s.Namespace, None, IsErased = false)
-    c.AddMembers <| Array.toList (Array.map parseEnum s.EnumTypes)
-    c
-
-  let parseSchemas (dataSvcs : Edmx.DataServices) =
-    dataSvcs.Schemas
-    |> Array.map parseSchema
-    |> Array.toList
-
-open ODataParser
-type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
+open SchemaUtil
+type SchemaParser (schema : Edmx.Schema) =
+  let c = new ProvidedTypeDefinition(schema.Namespace, None, IsErased = false)
   let entity f =
     let d = Collections.Generic.Dictionary<string,ProvidedTypeDefinition option>(HashIdentity.Structural)
     fun n ->
       if not <| d.ContainsKey n then
         let e = f n
         d.[n] <- e
-        if e.IsSome then
-          container.AddMember(e.Value)
+        //if e.IsSome then container.AddMember(e.Value)
         e
       else d.[n]
-  let schema = dataSvcs.Schemas.[0]
+
   let rec mapEntityType typeName : ProvidedTypeDefinition option =
-    ODataParser.tryFind schema.Namespace schema.EntityTypes typeName
+    tryFind schema.Namespace schema.EntityTypes typeName
     |> Option.map (fun entityTy ->
                    let ty = ProvidedTypeDefinition(entityTy.Name, Some typeof<obj>)
                    entityTy.Properties
-                   |> Array.iter (fun p -> ty.AddMember(ProvidedProperty(p.Name, mapType p.Type p.Nullable, GetterCode = fun _ -> <@@ obj() @@>)))
+                   |> Array.iter (fun p -> ty.AddMember(ProvidedProperty(p.Name, mapType  p.Type p.Nullable, GetterCode = fun _ -> <@@ obj() @@>)))
                    ty.AddMember(ProvidedConstructor([]))
                    ty)
   and mapComplexType typeName : ProvidedTypeDefinition option =
-    ODataParser.tryFind schema.Namespace schema.ComplexTypes typeName
+    tryFind schema.Namespace schema.ComplexTypes typeName
     |> Option.map (fun complexTy -> ProvidedTypeDefinition(complexTy.Name, None))
   and mapEnumType typeName : ProvidedTypeDefinition option =
-    ODataParser.tryFind schema.Namespace schema.EnumTypes typeName
+    tryFind schema.Namespace schema.EnumTypes typeName
     |> Option.map (fun enumTy -> ProvidedTypeDefinition(enumTy.Name, None))
   and mapSvcDefinedType typeName : Type option =
     choice {
-        return entity mapEntityType typeName
+        return entity (mapEntityType ) typeName
         return mapComplexType typeName
         return mapEnumType typeName
     } |> Option.map (fun ty -> upcast ty)
@@ -96,17 +64,58 @@ type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
     | "Edm.Int32"    -> typeof<int>
     | "Edm.Int64"    -> typeof<Int64>
     | "Edm.String"   -> typeof<string>
-    | s              -> defaultArg (mapSvcDefinedType s) typeof<obj>
+    | s              -> defaultArg (mapSvcDefinedType  s) typeof<obj>
     |> mkTy
- 
+
+  let typeCache = Collections.Generic.Dictionary<string,ProvidedTypeDefinition>()
+  let parseEnum (enumTy : Edmx.EnumType) =
+    let e = new ProvidedTypeDefinition(enumTy.Name, Some typeof<obj>, IsErased = false)
+    e.HideObjectMethods <- true
+    // TODO support optional longs in Edmx.EnumType
+    for v in enumTy.Members do
+      let long = typeof<int64> // per Edmx spec
+      let providedProperty =
+          ProvidedProperty(v.Name, long,
+              GetterCode = (fun _ -> Expr.Value v.Value.Value), IsStatic = true)
+      e.AddMembers [providedProperty :> MemberInfo]
+    typeCache.Add(e.Name, e)
+    e 
+  do
+    c.AddMembers <| Array.toList (Array.map parseEnum schema.EnumTypes)
+  member __.Container = c
+  member __.TypeCache = typeCache
+
+module ODataParser =
+  let parseMetadata metadata =
+    try
+      match Edmx.Parse(metadata).Edmx with
+      | Some metadata when metadata.Version = 4.0m || metadata.Version = 4.01m ->
+        Success metadata.DataServices
+      | Some _ -> Failure "Only support version 4.0"
+      | _ -> Failure "Metadata invalid"
+    with ex -> Failure (ex.Message)
+
+  let parseSchema (s : Edmx.Schema) =
+    let parser = new SchemaParser(s)
+    parser.Container
+
+  let parseSchemas (dataSvcs : Edmx.DataServices) =
+    dataSvcs.Schemas
+    |> Array.map parseSchema
+    |> Array.toList
+
+open ODataParser
+
+type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
+  (*
   let edmName name = XName.Get(name, "http://docs.oasis-open.org/odata/ns/edm")
   let mkFunction (fi : Edmx.FunctionImport) : ProvidedMethod option =
     tryFind schema.Namespace schema.Functions fi.Function
     |> Option.map (fun f ->
                    let ps = f.Parameters
-                            |> Array.map (fun p -> ProvidedParameter(p.Name, mapType p.Type p.Nullable))
+                            |> Array.map (fun p -> ProvidedParameter(p.Name, mapType schema p.Type p.Nullable))
                             |> Array.toList
-                   let m = ProvidedMethod(f.Name, ps, mapType f.ReturnType.Type f.ReturnType.Nullable)
+                   let m = ProvidedMethod(f.Name, ps, mapType schema f.ReturnType.Type f.ReturnType.Nullable)
                    m.IsStaticMethod <- true
                    m.InvokeCode <-
                      (fun args ->
@@ -121,7 +130,7 @@ type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
                         //let fName = Expr.Value m.Name
                         <@@ obj() @@>) // QUESTION: how to return Airport here (erased)?
                    m)
-
+*)
   // kinds: EntitySet, Singleton, FunctionImport
   member x.AppendTo () =
     (*

@@ -35,21 +35,14 @@ let ``should provide schemas as a simple type`` () =
   | [s] -> Assert.IsNotEmpty(s.Name); printfn "%A" s
   | _ -> Assert.Fail()
 
-(*
-  This would ideally parse as an actual CLI enum, but
-  https://github.com/fsharp/FSharp.Data/issues/37
-  Maybe this would be possible via
-  https://msdn.microsoft.com/en-us/library/system.reflection.emit.modulebuilder.defineenum.aspx
-*)
 [<Test>]
-let ``should parse EnumType as static read-only property`` () =
+let ``should parse EnumType as an CLI enum of int64`` () =
   let schema = tripPinMetadata.Schemas.[0]
   let p = new SchemaParser(schema)
   for s in schema.EnumTypes do
     let t = p.TypeCache.[s.Name]
-    Assert.AreEqual(Seq.length s.Members, Seq.length <| t.GetProperties())
-    Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> not <| p.CanWrite))
-    Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> p.GetMethod.IsStatic))
+    Assert.IsTrue(t.IsEnum)
+    Assert.AreSame(typeof<int64>, t.GetEnumUnderlyingType())
 (*
 [<Test>]
 let ``should parse ComplexType and place in type cache`` () =

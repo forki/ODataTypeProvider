@@ -69,15 +69,15 @@ type SchemaParser (schema : Edmx.Schema) =
 
   let typeCache = Collections.Generic.Dictionary<string,ProvidedTypeDefinition>()
   let parseEnum (enumTy : Edmx.EnumType) =
-    let e = new ProvidedTypeDefinition(enumTy.Name, Some typeof<obj>, IsErased = false)
+    let e = ProvidedTypeDefinition(enumTy.Name, Some typeof<obj>, IsErased = false, HideObjectMethods = true)
+    let long = typeof<int64> // per Edmx spec, all EnumType are long
+    e.SetBaseType typeof<Enum>
+    e.SetEnumUnderlyingType long
     e.HideObjectMethods <- true
-    // TODO support optional longs in Edmx.EnumType
-    for v in enumTy.Members do
-      let long = typeof<int64> // per Edmx spec
-      let providedProperty =
-          ProvidedProperty(v.Name, long,
-              GetterCode = (fun _ -> Expr.Value v.Value.Value), IsStatic = true)
-      e.AddMembers [providedProperty :> MemberInfo]
+    enumTy.Members
+    |> Array.map (fun v -> ProvidedLiteralField(v.Name, e, v.Value.Value))
+    |> Array.toList
+    |> e.AddMembers
     typeCache.Add(e.Name, e)
     e 
   do

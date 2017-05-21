@@ -43,12 +43,11 @@ let ``should parse EnumType as an CLI enum of int64`` () =
     let t = p.TypeCache.[s.Name]
     Assert.IsTrue(t.IsEnum)
     Assert.AreSame(typeof<int64>, t.GetEnumUnderlyingType())
-(*
+
 [<Test>]
-let ``should parse ComplexType and place in type cache`` () =
-  for s in tripPinMetadata.Schemas.[0].ComplexTypes do
-    let t = ODataParser.parseComplexType s
-    Assert.AreEqual(Seq.length s.Members, Seq.length <| t.GetProperties())
-    Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> not <| p.CanWrite))
-    Assert.IsTrue (t.GetProperties() |> Seq.forall (fun p -> p.GetMethod.IsStatic))
-*) 
+let ``should parse ComplexType and place in type cache``() =
+  let schema = tripPinMetadata.Schemas.[0]
+  let p = new SchemaParser(schema)
+  for s in schema.ComplexTypes do
+    let t = p.TypeCache.["City"]
+    Assert.IsTrue(t.GetProperties() |> Seq.forall (fun p -> p.PropertyType = typeof<string>))

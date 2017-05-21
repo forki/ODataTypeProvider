@@ -73,15 +73,28 @@ type SchemaParser (schema : Edmx.Schema) =
     let long = typeof<int64> // per Edmx spec, all EnumType are long
     e.SetBaseType typeof<Enum>
     e.SetEnumUnderlyingType long
-    e.HideObjectMethods <- true
     enumTy.Members
     |> Array.map (fun v -> ProvidedLiteralField(v.Name, e, v.Value.Value))
     |> Array.toList
     |> e.AddMembers
     typeCache.Add(e.Name, e)
     e 
+  let parseComplexType (complexTy : Edmx.ComplexType) =
+    let e = ProvidedTypeDefinition(complexTy.Name, Some typeof<obj>, IsErased = false, HideObjectMethods = true)
+    for c in complexTy.Properties do
+      let p = ProvidedField("_" + c.Name.ToLowerInvariant(), mapType c.Type (Some false))
+      let pr = ProvidedProperty(c.Name, p.FieldType,
+                 GetterCode = (fun [this] -> Expr.FieldGet (this, p)),
+                 SetterCode = (fun [this;v] -> Expr.FieldSet(this, p, v)))
+      e.AddMembers [ p :> MemberInfo; pr :> MemberInfo ]
+    typeCache.Add(e.Name, e)
+    let ctor = ProvidedConstructor([],InvokeCode = fun _ -> <@@ () @@>)
+    e.AddMember ctor
+    e
+
   do
     c.AddMembers <| Array.toList (Array.map parseEnum schema.EnumTypes)
+    c.AddMembers <| Array.toList (Array.map parseComplexType (schema.ComplexTypes |> Array.filter (fun t -> t.Name = "City")))
   member __.Container = c
   member __.TypeCache = typeCache
 

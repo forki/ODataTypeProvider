@@ -10,6 +10,8 @@ type Edm = XmlProvider<Schema=ODataSchemas.Edm>
 type Edmx = XmlProvider<Schema=ODataSchemas.Edmx>
 
 module ODataParser =
+  open System.Reflection
+
   let inline tryFind (schemaNamespace : string) (elements : ^e array) (name : string) =
     let isNameMatch (e : ^e) =
       let localName = (^e : (member Name: string) e)
@@ -24,12 +26,30 @@ module ODataParser =
       | Some _ -> Failure "Only support version 4.0"
       | _ -> Failure "Metadata invalid"
     with ex -> Failure (ex.Message)
+
+  let parseEnum (s : Edmx.EnumType) =
+    let e = new ProvidedTypeDefinition(s.Name, Some typeof<obj>, IsErased = false)
+    e.HideObjectMethods <- true
+    // TODO support optional longs in Edmx.EnumType
+    for v in s.Members do
+      let long = typeof<int64> // per Edmx spec
+      let providedProperty =
+          ProvidedProperty(v.Name, long,
+              GetterCode = (fun _ -> Expr.Value v.Value.Value), IsStatic = true)
+      e.AddMembers [providedProperty :> MemberInfo]
+    e 
+
+  let parseSchema (s : Edmx.Schema) =
+    let c = new ProvidedTypeDefinition(s.Namespace, None, IsErased = false)
+    c.AddMembers <| Array.toList (Array.map parseEnum s.EnumTypes)
+    c
+
   let parseSchemas (dataSvcs : Edmx.DataServices) =
     dataSvcs.Schemas
-    |> Array.map (fun s -> new ProvidedTypeDefinition(s.Namespace, Some typeof<obj>))
+    |> Array.map parseSchema
+    |> Array.toList
 
-  
-
+open ODataParser
 type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
   let entity f =
     let d = Collections.Generic.Dictionary<string,ProvidedTypeDefinition option>(HashIdentity.Structural)
@@ -81,7 +101,7 @@ type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
  
   let edmName name = XName.Get(name, "http://docs.oasis-open.org/odata/ns/edm")
   let mkFunction (fi : Edmx.FunctionImport) : ProvidedMethod option =
-    ODataParser.tryFind schema.Namespace schema.Functions fi.Function
+    tryFind schema.Namespace schema.Functions fi.Function
     |> Option.map (fun f ->
                    let ps = f.Parameters
                             |> Array.map (fun p -> ProvidedParameter(p.Name, mapType p.Type p.Nullable))
@@ -104,8 +124,8 @@ type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
 
   // kinds: EntitySet, Singleton, FunctionImport
   member x.AppendTo () =
-    let functionsTy = ProvidedTypeDefinition("Functions", None)
     (*
+    let functionsTy = ProvidedTypeDefinition("Functions", None)
     let entityContainer = schema.EntityContainers.[0] // exactly one of these by spec
 
     let functions = entityContainer.XElement.Elements(edmName "FunctionImport")
@@ -113,6 +133,7 @@ type OData (dataSvcs : Edmx.DataServices, container : ProvidedTypeDefinition) =
                     |> Seq.choose mkFunction
                     |> Seq.toList
     functionsTy.AddMembers(functions)
-    *)
     container.AddMember(functionsTy)
+    *)
+    container.AddMembers (parseSchemas dataSvcs)
     container

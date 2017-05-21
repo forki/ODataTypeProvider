@@ -53,7 +53,6 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Inputs.fs" />
     <Compile Include="Tests.fs" />
-    <None Include="Script.fsx" />
     <None Include="paket.references" />
     <Content Include="app.config" />
   </ItemGroup>

@@ -378,7 +378,7 @@ Target "All" DoNothing
   ==> "CopyBinaries"
   ==> "RunTests"
   ==> "GenerateReferenceDocs"
-  ==> "GenerateDocs"
+//  ==> "GenerateDocs"
   ==> "All"
   =?> ("ReleaseDocs",isLocalBuild)
 

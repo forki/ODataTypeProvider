@@ -41,16 +41,25 @@ type ODataProviders (cfg : TypeProviderConfig) as tp =
   inherit TypeProviderForNamespaces ()
   let ns = "FSharp.Data.TypeProviders"
   let asm = Assembly.LoadFrom cfg.RuntimeAssembly
-  let odataV4Container = new ProvidedTypeDefinition(asm, ns, "ODataV4", Some typeof<obj>)
+  let odataV4Container = new ProvidedTypeDefinition(asm, ns, "ODataV4", Some typeof<obj>, IsErased = false)
   do
     let path = new ProvidedStaticParameter("Path", typeof<string>)
     let createODataV4 (typeName : string) (ValidODataPath path) =
-      let odataV4 = new ProvidedTypeDefinition(asm, ns, typeName, Some typeof<obj>)
+      let odataV4 = new ProvidedTypeDefinition(asm, ns, typeName, Some typeof<obj>, IsErased = false)
+      odataV4.HideObjectMethods <- true
       match downloadMetadata path with
       | Success m ->
         match parseMetadata m with
-        | Success dataSvcs -> OData(dataSvcs, odataV4).AppendTo ()
+        | Success dataSvcs ->
+          let container = OData(dataSvcs, odataV4).AppendTo ()
+          let tempAsmPath = Path.ChangeExtension(Path.GetTempFileName(), ".dll")
+          printfn "Creating assembly %s" tempAsmPath
+          let tempAsm = ProvidedAssembly tempAsmPath
+          tempAsm.AddTypes [container]
+          container
         | Failure f -> failwith f
       | Failure f -> raise (ParseMetadataException f)
+
     odataV4Container.DefineStaticParameters([path], createODataV4)
+
     tp.AddNamespace(ns, [odataV4Container])

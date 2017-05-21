@@ -2,13 +2,11 @@ module ODataTypeProvider.Tests
 
 open NUnit.Framework
 open FSharp.Data.TypeProviders
-open System.IO
 
-type O = ODataV4<"http://services.odata.org/V4/TripPinService">
-
-(*
+type O = ODataV4<"http://services.odata.org/V4/TripPinService/">
+type A = O.``Microsoft.OData.SampleService.Models.TripPin``
 [<Test>]
-let ``can retrieve a simple entity`` () =
-  let a = O.Functions
-  Assert.IsNotEmpty a.Name
-  *)
+let ``can resolve enum`` () =
+  Assert.AreEqual(1, A.PersonGender.Male)
+  Assert.AreEqual(1, A.PersonGender.Female)
+  Assert.AreEqual(2, A.PersonGender.Unknown)
